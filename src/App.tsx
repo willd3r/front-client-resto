@@ -11,6 +11,7 @@ import { getTranslatedDescription } from './utils/descriptionTranslations';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
+const BASE_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
 
 interface Table {
   id: string;
@@ -216,7 +217,7 @@ function AppContent() {
             {company?.logo && (
               <div style={{ marginTop: '2rem' }}>
                 <img 
-                  src={`http://localhost:3000${company.logo}`}
+                  src={`${BASE_URL}${company.logo}`}
                   alt={company.name}
                   style={{ maxHeight: '100px', objectFit: 'contain' }}
                 />
@@ -231,7 +232,7 @@ function AppContent() {
   return (
     <div className="container" style={{ 
       paddingBottom: '100px',
-      backgroundImage: company?.background_image ? `url(http://localhost:3000${company.background_image})` : 'none',
+      backgroundImage: company?.background_image ? `url(${BASE_URL}${company.background_image})` : 'none',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'
@@ -240,7 +241,7 @@ function AppContent() {
         <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
           {company?.menu_logo ? (
             <img
-              src={`http://localhost:3000${company.menu_logo}`}
+              src={`${BASE_URL}${company.menu_logo}`}
               alt={company.name}
               style={{ maxHeight: '60px', objectFit: 'contain', marginBottom: '0.5rem' }}
             />
@@ -295,7 +296,7 @@ function AppContent() {
               <div className="menu-item-image">
                 {item.image_url ? (
                   <img
-                    src={item.image_url?.startsWith('http') ? item.image_url : `http://localhost:3000${item.image_url}`}
+                    src={item.image_url?.startsWith('http') ? item.image_url : `${BASE_URL}${item.image_url}`}
                     alt={item.name}
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = getMenuItemImage(item.name, item.category);
