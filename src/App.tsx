@@ -4,7 +4,10 @@ import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import { CompanyProvider } from './context/CompanyContext';
 import { useCompany } from './context/useCompany';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { LANGUAGES } from './utils/translations';
 import { getMenuItemImage } from './utils/imageGenerator';
+import { getTranslatedDescription } from './utils/descriptionTranslations';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
@@ -25,16 +28,9 @@ interface MenuItem {
   is_available: boolean;
 }
 
-const CATEGORIES = [
-  { value: 'all', label: '🍽️ Todos' },
-  { value: 'entradas', label: '🥗 Entradas' },
-  { value: 'principales', label: '🍖 Principales' },
-  { value: 'bebidas', label: '🥤 Bebidas' },
-  { value: 'postres', label: '🍰 Postres' },
-];
-
 function AppContent() {
   const { company } = useCompany();
+  const { t, language, setLanguage } = useLanguage();
   const [table, setTable] = useState<Table | null>(null);
   const [loading, setLoading] = useState(true);
   const [called, setCalled] = useState(false);
@@ -59,9 +55,8 @@ function AppContent() {
     // Get token from URL
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
-
     if (!token) {
-      setError('Token QR inválido');
+      setError(t('error.invalidToken'));
       setLoading(false);
       return;
     }
@@ -70,7 +65,7 @@ function AppContent() {
     loadTable(token);
     // Load menu
     loadMenu();
-  }, []);
+  }, [t]);
 
   // Initialize socket once table is loaded
   useEffect(() => {
@@ -100,13 +95,12 @@ function AppContent() {
       newSocket.disconnect();
     };
   }, [table]);
-
   const loadTable = async (token: string) => {
     try {
       const response = await axios.get(`${API_URL}/tables/token/${token}`);
       setTable(response.data);
     } catch (err) {
-      setError('Mesa no encontrada');
+      setError(t('error.tableNotFound'));
     } finally {
       setLoading(false);
     }
@@ -147,7 +141,7 @@ function AppContent() {
     return (
       <div className="loading">
         <div className="loading-spinner"></div>
-        <p>Cargando...</p>
+        <p>{t('error.loading')}</p>
       </div>
     );
   }
@@ -187,7 +181,7 @@ function AppContent() {
               fontWeight: '500'
             }}
           >
-            ← Volver al Menú
+            ← {t('button.backToMenu')}
           </button>
         </div>
 
@@ -199,11 +193,11 @@ function AppContent() {
             color: '#333',
             textAlign: 'center'
           }}>
-            <h2 style={{ marginBottom: '1rem' }}>📋 Información de tu Mesa</h2>
+            <h2 style={{ marginBottom: '1rem' }}>📋 {t('profile.tableInfo')}</h2>
             <div style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>
-              <p><strong>Número de Mesa:</strong> {table?.table_number}</p>
+              <p><strong>{t('profile.tableNumber')}:</strong> {table?.table_number}</p>
               <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '1rem' }}>
-                Token: {table?.qr_token?.substring(0, 8)}...
+                {t('profile.token')}: {table?.qr_token?.substring(0, 8)}...
               </p>
             </div>
 
@@ -213,10 +207,9 @@ function AppContent() {
               background: '#f0f0f0',
               marginTop: '2rem'
             }}>
-              <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>ℹ️ Acerca de {company?.name || 'Tu Resto'}</h3>
+              <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>ℹ️ {t('profile.about')} {company?.name || 'Tu Resto'}</h3>
               <p style={{ margin: 0, color: '#666' }}>
-                Bienvenido a nuestra plataforma de pedidos digital. 
-                Aquí puedes ver el menú, realizar pedidos y comunicarte con nuestro equipo.
+                {t('profile.welcome')}
               </p>
             </div>
 
@@ -258,16 +251,40 @@ function AppContent() {
       </div>
 
       {/* Categories Navigation */}
-      <div className="categories-nav">
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.value}
-            className={`category-pill ${activeCategory === cat.value ? 'active' : ''}`}
-            onClick={() => setActiveCategory(cat.value)}
-          >
-            {cat.label}
-          </button>
-        ))}
+      <div className="categories-nav" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', flex: 1 }}>
+          {['all', 'entradas', 'principales', 'bebidas', 'postres'].map(cat => (
+            <button
+              key={cat}
+              className={`category-pill ${activeCategory === cat ? 'active' : ''}`}
+              onClick={() => setActiveCategory(cat)}
+            >
+              {t(`category.${cat}`)}
+            </button>
+          ))}
+        </div>
+        
+        {/* Language Selector */}
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as any)}
+          style={{
+            padding: '0.5rem 0.75rem',
+            borderRadius: '8px',
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-color)',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            minWidth: '120px',
+          }}
+        >
+          {Object.entries(LANGUAGES).map(([lang, { name, flag }]) => (
+            <option key={lang} value={lang} style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+              {flag} {name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Menu Grid */}
@@ -296,13 +313,13 @@ function AppContent() {
                   <h3 className="menu-item-title">{item.name}</h3>
                   <span className="menu-item-price">${item.price.toFixed(2)}</span>
                 </div>
-                <p className="menu-item-desc">{item.description}</p>
+                <p className="menu-item-desc">{getTranslatedDescription(item.description, language)}</p>
               </div>
             </div>
           ))
         ) : (
           <div className="empty-state">
-            <p>No hay platillos disponibles en esta categoría.</p>
+            <p>{t('menu.noItems')}</p>
           </div>
         )}
       </div>
@@ -317,12 +334,12 @@ function AppContent() {
           {called ? (
             <>
               <CheckCircle size={24} />
-              <span>Mesero Notificado</span>
+              <span>{t('button.waiterNotified')}</span>
             </>
           ) : (
             <>
               <Bell size={24} className={!called ? 'pulse' : ''} />
-              <span>Llamar Mesero</span>
+              <span>{t('button.callWaiter')}</span>
             </>
           )}
         </button>
@@ -334,7 +351,9 @@ function AppContent() {
 function App() {
   return (
     <CompanyProvider>
-      <AppContent />
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </CompanyProvider>
   );
 }
