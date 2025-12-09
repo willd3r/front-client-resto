@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Bell, CheckCircle, UtensilsCrossed } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Bell, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import { CompanyProvider } from './context/CompanyContext';

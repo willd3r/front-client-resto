@@ -92,7 +92,7 @@ const getColorForCategory = (category: string): { from: string; to: string } => 
  * Alternative: Use external image API (like Lorem Picsum or custom)
  * This would require a backend that generates or stores images
  */
-export const getMenuItemImageURL = (name: string, category: string, itemId: string): string => {
+export const getMenuItemImageURL = (itemId: string): string => {
   // If we have a backend endpoint, use it
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
   return `${API_URL}/menu/${itemId}/image`;
