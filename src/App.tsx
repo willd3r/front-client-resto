@@ -100,7 +100,7 @@ function AppContent() {
     try {
       const response = await axios.get(`${API_URL}/tables/token/${token}`);
       setTable(response.data);
-    } catch (err) {
+    } catch {
       setError(t('error.tableNotFound'));
     } finally {
       setLoading(false);
@@ -111,8 +111,8 @@ function AppContent() {
     try {
       const response = await axios.get(`${API_URL}/menu`);
       setMenuItems(response.data);
-    } catch (err) {
-      console.error('Error loading menu:', err);
+    } catch (_err) {
+      console.error('Error loading menu:', _err);
     }
   };
 
@@ -133,8 +133,9 @@ function AppContent() {
       });
 
       setCalled(true);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al llamar al mesero');
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Error al llamar al mesero');
     }
   };
 
@@ -268,7 +269,7 @@ function AppContent() {
         {/* Language Selector */}
         <select
           value={language}
-          onChange={(e) => setLanguage(e.target.value as any)}
+          onChange={(e) => setLanguage(e.target.value as keyof typeof LANGUAGES)}
           style={{
             padding: '0.5rem 0.75rem',
             borderRadius: '8px',
