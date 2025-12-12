@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Bell, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
@@ -43,6 +43,26 @@ function AppContent() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
+  const loadTable = useCallback(async (token: string) => {
+    try {
+      const response = await axios.get(`${API_URL}/tables/token/${token}`);
+      setTable(response.data);
+    } catch {
+      setError(t('error.tableNotFound'));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
+  const loadMenu = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/menu`);
+      setMenuItems(response.data);
+    } catch (_err) {
+      console.error('Error loading menu:', _err);
+    }
+  }, []);
+
   // Update gradient when company colors change
   useEffect(() => {
     if (company) {
@@ -50,7 +70,7 @@ function AppContent() {
       const gradient = `linear-gradient(135deg, ${company.primary_color}, ${company.secondary_color})`;
       root.style.setProperty('--gradient-primary', gradient);
     }
-  }, [company?.primary_color, company?.secondary_color]);
+  }, [company]);
 
   useEffect(() => {
     // Get token from URL
@@ -66,7 +86,7 @@ function AppContent() {
     loadTable(token);
     // Load menu
     loadMenu();
-  }, [t]);
+  }, [t, loadTable, loadMenu]);
 
   // Initialize socket once table is loaded
   useEffect(() => {
@@ -96,25 +116,6 @@ function AppContent() {
       newSocket.disconnect();
     };
   }, [table]);
-  const loadTable = async (token: string) => {
-    try {
-      const response = await axios.get(`${API_URL}/tables/token/${token}`);
-      setTable(response.data);
-    } catch {
-      setError(t('error.tableNotFound'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMenu = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/menu`);
-      setMenuItems(response.data);
-    } catch (_err) {
-      console.error('Error loading menu:', _err);
-    }
-  };
 
   const handleCallWaiter = async () => {
     if (!table || !socket) return;
